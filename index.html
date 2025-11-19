@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Відьмак: Генератор Подій</title>
     
-    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,600;0,800;1,400&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
@@ -51,7 +47,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- ICONS (SVG Components to replace Lucide) ---
+        // --- ICONS (SVG Components) ---
         const IconWrapper = ({ children, size = 24, className = "" }) => (
             <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -70,13 +66,11 @@
         );
 
         const Settings = (props) => <IconWrapper {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconWrapper>;
-        // Renamed to MapIcon to avoid conflict with global Map constructor
         const MapIcon = (props) => <IconWrapper {...props}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></IconWrapper>;
         const Sword = (props) => <IconWrapper {...props}><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/></IconWrapper>;
         const Ship = (props) => <IconWrapper {...props}><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.9 5.8 2.38 8"/><path d="M10 2v16"/><path d="M16 6h-6"/><path d="M12 18 7 6l5-3 5 3Z"/></IconWrapper>;
         const Anchor = (props) => <IconWrapper {...props}><circle cx="12" cy="5" r="3"/><line x1="12" x2="12" y1="22" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></IconWrapper>;
         const Skull = (props) => <IconWrapper {...props}><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></IconWrapper>;
-        const Sparkles = (props) => <IconWrapper {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M19 17v4"/><path d="M15 19h4"/></IconWrapper>;
         const Dices = (props) => <IconWrapper {...props}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></IconWrapper>;
         const AlertTriangle = (props) => <IconWrapper {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></IconWrapper>;
         const ChevronRight = (props) => <IconWrapper {...props}><path d="m9 18 6-6-6-6"/></IconWrapper>;
@@ -84,12 +78,9 @@
         const XIcon = (props) => <IconWrapper {...props}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></IconWrapper>;
         const Copy = (props) => <IconWrapper {...props}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></IconWrapper>;
         const Check = (props) => <IconWrapper {...props}><polyline points="20 6 9 17 4 12"/></IconWrapper>;
-        const ShieldAlert = (props) => <IconWrapper {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></IconWrapper>;
-        const Coins = (props) => <IconWrapper {...props}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></IconWrapper>;
         const Scroll = (props) => <IconWrapper {...props}><path d="M8 17.92V22a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2Z"/><path d="M8 2v15.92a2 2 0 0 0 2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.08a2 2 0 0 0 2-2Z"/></IconWrapper>;
 
-
-        // --- ASSETS (High Fidelity) ---
+        // --- ASSETS ---
         const TEXTURES = {
             paper: "https://www.transparenttextures.com/patterns/aged-paper.png",
             darkLeather: "https://www.transparenttextures.com/patterns/black-scales.png",
@@ -163,9 +154,30 @@
             }
         };
 
+        // --- NEW LOGIC: Result Analyzer ---
+        const analyzeResult = (text) => {
+            // Розділяємо текст на історію та наслідок за маркером (НАСЛІДОК):
+            const parts = text.split(/\(НАСЛІДОК\):/i);
+            const story = parts[0].trim();
+            const consequence = parts.length > 1 ? parts[1].trim() : null;
+
+            let status = 'neutral';
+            
+            if (consequence) {
+                const lower = consequence.toLowerCase();
+                // Ключові слова для визначення успіху або провалу
+                if (lower.includes('знизьте') || lower.includes('втрачаєте') || lower.includes('скиньте') || lower.includes('отримайте шкоду')) {
+                    status = 'failure';
+                } else if (lower.includes('отримайте') || lower.includes('підніміть') || lower.includes('візьміть') || lower.includes('нагорода')) {
+                    status = 'success';
+                }
+            }
+
+            return { story, consequence, status };
+        };
+
         const fetchLiveEvent = async (type, apiKey) => {
             if (!apiKey) throw new Error("API Key is missing");
-            // Using the reliable flash preview model which handles formatting well
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const requestBody = { contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\nТип події: "${type}". Згенеруй нову, унікальну історію.` }] }] };
             
@@ -286,42 +298,6 @@
             </div>
         );
 
-        const CardFrame = ({ children, type }) => {
-            const themes = {
-                city: { border: 'border-amber-900/60', glow: 'shadow-amber-900/20', icon: 'text-amber-700' },
-                wilds: { border: 'border-emerald-900/60', glow: 'shadow-emerald-900/20', icon: 'text-emerald-700' },
-                skellige: { border: 'border-cyan-900/60', glow: 'shadow-cyan-900/20', icon: 'text-cyan-700' }
-            };
-            const theme = themes[type] || themes.city;
-
-            return (
-                <div className="relative w-full max-w-3xl mx-auto perspective-1000 flex flex-col group">
-                {/* Outer Glow */}
-                <div className={`absolute inset-0 rounded-sm bg-gradient-to-b from-black to-transparent opacity-80 blur-2xl transform scale-95 translate-y-4 transition-all duration-700 ${theme.glow}`}></div>
-                
-                <div className={`
-                    relative w-full bg-[#0a0a0a] rounded-sm shadow-2xl flex flex-col border-[1px] ${theme.border}
-                    overflow-hidden transition-all duration-500 min-h-[700px]
-                `}>
-                    {/* Layered Textures */}
-                    <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-overlay" style={{backgroundImage: `url(${TEXTURES.darkLeather})`}}></div>
-                    <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-multiply" style={{backgroundImage: `url(${TEXTURES.paper})`}}></div>
-                    {(type === 'wilds' || type === 'skellige') && (
-                    <div className="absolute inset-0 opacity-30 pointer-events-none mix-blend-screen animate-pulse" style={{animationDuration: '8s', backgroundImage: `url(${TEXTURES.fog})`}}></div>
-                    )}
-
-                    {/* Ornamental Corners */}
-                    <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-[#c5a059]/30 rounded-tl-sm pointer-events-none"></div>
-                    <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-[#c5a059]/30 rounded-tr-sm pointer-events-none"></div>
-                    <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-[#c5a059]/30 rounded-bl-sm pointer-events-none"></div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-[#c5a059]/30 rounded-br-sm pointer-events-none"></div>
-
-                    {children}
-                </div>
-                </div>
-            );
-        };
-
         const ActionButton = ({ onClick, label, index }) => (
             <button 
                 onClick={onClick}
@@ -349,52 +325,114 @@
             </button>
         );
 
-        const ResultView = ({ text, roll, onReset }) => (
-            <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700 p-8">
-                <div className="flex-1 flex flex-col justify-center items-center mb-8">
-                <div className="w-full relative bg-[#080808]/80 border border-[#c5a059]/30 shadow-2xl rounded-sm p-10">
-                    
-                    {/* Decorative Elements */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-[#c5a059] to-transparent shadow-[0_0_10px_#c5a059]"></div>
-                    
-                    <div className="flex items-center justify-center gap-3 mb-8">
-                    {roll && (
-                        <div className="w-12 h-12 flex items-center justify-center border-2 border-[#c5a059] text-[#c5a059] font-cinzel font-bold text-2xl bg-black rotate-3 shadow-[0_0_20px_rgba(197,160,89,0.4)] transform hover:rotate-12 transition-transform duration-500">
-                        {roll}
+        // --- NEW RESULT COMPONENT ---
+        const ResultView = ({ resultData, roll, onReset }) => {
+            const { story, consequence, status } = resultData;
+
+            // Визначаємо стиль на основі статусу
+            const styles = {
+                success: {
+                    color: 'text-emerald-500',
+                    border: 'border-emerald-500/50',
+                    bg: 'bg-emerald-900/20',
+                    title: 'УСПІХ',
+                    icon: Check
+                },
+                failure: {
+                    color: 'text-red-500',
+                    border: 'border-red-500/50',
+                    bg: 'bg-red-900/20',
+                    title: 'ПРОВАЛ',
+                    icon: Skull
+                },
+                neutral: {
+                    color: 'text-[#c5a059]',
+                    border: 'border-[#c5a059]/50',
+                    bg: 'bg-[#c5a059]/10',
+                    title: 'ДОЛЯ ВИРІШЕНА',
+                    icon: Scroll
+                }
+            };
+
+            // Якщо status не визначено, беремо neutral
+            const theme = styles[status] || styles.neutral;
+            const StatusIcon = theme.icon;
+
+            return (
+                <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700 p-6 md:p-8">
+                    <div className="flex-1 flex flex-col justify-center items-center">
+                        
+                        {/* Main Result Card */}
+                        <div className={`w-full relative bg-[#080808]/95 border ${theme.border} shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden`}>
+                            
+                            {/* Background Glow */}
+                            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 ${theme.bg} blur-3xl opacity-40 pointer-events-none`}></div>
+
+                            {/* Header: Roll & Status */}
+                            <div className="flex flex-col items-center justify-center gap-4 mb-8 relative z-10">
+                                {roll && (
+                                    <div className={`
+                                        w-16 h-16 flex items-center justify-center border-2 ${theme.border} 
+                                        ${theme.color} font-cinzel font-bold text-3xl bg-black 
+                                        shadow-[0_0_20px_rgba(0,0,0,0.5)] rotate-3 transform hover:rotate-6 transition-transform
+                                    `}>
+                                        {roll}
+                                    </div>
+                                )}
+                                
+                                <div className="flex items-center gap-3">
+                                    <StatusIcon className={theme.color} size={28} />
+                                    <h3 className={`font-cinzel ${theme.color} text-2xl uppercase tracking-[0.3em] font-bold drop-shadow-md`}>
+                                        {theme.title}
+                                    </h3>
+                                    <StatusIcon className={theme.color} size={28} style={{transform: 'scaleX(-1)'}} />
+                                </div>
+                            </div>
+
+                            {/* Narrative Text */}
+                            <div className="relative mb-8">
+                                <p className="font-alegreya text-xl md:text-2xl text-[#e8dcca] italic leading-loose text-center">
+                                    {story}
+                                </p>
+                            </div>
+
+                            {/* Consequence Box (Always visible if there is a consequence) */}
+                            {consequence && (
+                                <div className="relative mt-6 animate-in slide-in-from-bottom-4 delay-300 w-full">
+                                    <div className="absolute inset-0 border border-white/10 bg-white/5 transform skew-x-[-2deg]"></div>
+                                    <div className={`
+                                        relative p-6 border-l-4 ${theme.border} bg-[#050505]
+                                        flex flex-col items-center text-center gap-2
+                                    `}>
+                                        <span className="font-cinzel text-[10px] uppercase tracking-[0.4em] text-[#888]">Наслідок</span>
+                                        <p className="font-cinzel font-bold text-lg md:text-xl text-white tracking-wide">
+                                            {consequence}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
-                    <h3 className="font-cinzel text-[#c5a059] text-xl uppercase tracking-[0.3em] font-bold drop-shadow-md">
-                        Доля Вирішена
-                    </h3>
                     </div>
 
-                    <div className="relative">
-                    <span className="absolute -left-6 -top-4 text-6xl text-[#c5a059]/10 font-serif">“</span>
-                    <p className="font-alegreya text-2xl md:text-3xl text-[#e8dcca] italic leading-loose whitespace-pre-line text-center">
-                        {text}
-                    </p>
-                    <span className="absolute -right-6 bottom-0 text-6xl text-[#c5a059]/10 font-serif rotate-180">“</span>
+                    {/* Footer Button */}
+                    <div className="pt-6 mt-4 w-full max-w-xl mx-auto">
+                        <button 
+                            onClick={onReset}
+                            className="
+                            group w-full py-5 bg-[#8a1c1c] hover:bg-[#a02222] text-[#e8dcca] 
+                            font-cinzel font-bold text-lg uppercase tracking-[0.25em] 
+                            transition-all rounded-sm flex items-center justify-center gap-4 
+                            shadow-[0_5px_15px_rgba(0,0,0,0.5)] border border-white/10 
+                            transform hover:-translate-y-1
+                            "
+                        >
+                            <span>Далі в Дорогу</span>
+                            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
                     </div>
                 </div>
-                </div>
-
-                <div className="pt-6 border-t border-white/10">
-                <button 
-                    onClick={onReset}
-                    className="
-                    w-full py-6 bg-[#8a1c1c] hover:bg-[#a02222] text-[#e8dcca] 
-                    font-cinzel font-bold text-xl uppercase tracking-[0.25em] 
-                    transition-all rounded-sm flex items-center justify-center gap-4 
-                    shadow-[0_5px_15px_rgba(0,0,0,0.5)] hover:shadow-[0_5px_30px_rgba(138,28,28,0.5)]
-                    border border-white/10 transform hover:-translate-y-1
-                    "
-                >
-                    <span>Далі в Дорогу</span>
-                    <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-                </div>
-            </div>
-        );
+            );
+        };
 
         const ModeButton = ({ active, onClick, icon: Icon, label, themeColor }) => (
             <button 
@@ -431,7 +469,7 @@
             const [apiKey, setApiKey] = useState('');
             const [currentCard, setCurrentCard] = useState(null);
             const [diceCallback, setDiceCallback] = useState(null);
-            const [resultText, setResultText] = useState('');
+            const [resultText, setResultText] = useState(null); // Changed to support object
             const [userRoll, setUserRoll] = useState(null);
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
@@ -478,17 +516,21 @@
 
             const handleChoice = (choice) => {
                 if (choice.result.toLowerCase().includes("киньте кубик") || choice.result.match(/\d-\d:/)) {
-                setViewState('dice');
-                setDiceCallback(() => (roll) => {
-                    setUserRoll(roll);
-                    const outcome = parseDiceOutcome(choice.result, roll);
-                    setResultText(outcome);
-                    setViewState('result');
-                });
+                    setViewState('dice');
+                    setDiceCallback(() => (roll) => {
+                        setUserRoll(roll);
+                        const outcome = parseDiceOutcome(choice.result, roll);
+                        // Analyze outcome for styling
+                        const analysis = analyzeResult(outcome);
+                        setResultText(analysis);
+                        setViewState('result');
+                    });
                 } else {
-                setUserRoll(null);
-                setResultText(choice.result);
-                setViewState('result');
+                    setUserRoll(null);
+                    // Analyze result for styling
+                    const analysis = analyzeResult(choice.result);
+                    setResultText(analysis);
+                    setViewState('result');
                 }
             };
 
@@ -622,17 +664,19 @@
                             {/* Dynamic Border Color */}
                             <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${themeColor}-600 to-transparent opacity-50`}></div>
 
-                            {/* Header */}
-                            <div className="p-8 pb-4 text-center relative z-10">
-                                <div className="inline-flex items-center gap-3 mb-2 opacity-50">
-                                    <div className="h-[1px] w-8 bg-[#c5a059]"></div>
-                                    <span className="font-cinzel text-[10px] uppercase tracking-[0.3em] text-[#c5a059]">Подія #{currentCard.id}</span>
-                                    <div className="h-[1px] w-8 bg-[#c5a059]"></div>
+                            {/* Header (Only for story mode) */}
+                            {viewState === 'story' && (
+                                <div className="p-8 pb-4 text-center relative z-10">
+                                    <div className="inline-flex items-center gap-3 mb-2 opacity-50">
+                                        <div className="h-[1px] w-8 bg-[#c5a059]"></div>
+                                        <span className="font-cinzel text-[10px] uppercase tracking-[0.3em] text-[#c5a059]">Подія #{currentCard.id}</span>
+                                        <div className="h-[1px] w-8 bg-[#c5a059]"></div>
+                                    </div>
+                                    <h2 className="text-3xl md:text-4xl font-cinzel font-bold text-[#e8dcca] leading-tight drop-shadow-lg">
+                                        {currentCard.title}
+                                    </h2>
                                 </div>
-                                <h2 className="text-3xl md:text-4xl font-cinzel font-bold text-[#e8dcca] leading-tight drop-shadow-lg">
-                                    {currentCard.title}
-                                </h2>
-                            </div>
+                            )}
 
                             {/* Content Area */}
                             <div className="flex-1 relative p-8 md:p-12 pt-4 overflow-hidden flex flex-col">
@@ -663,8 +707,8 @@
                                     </div>
                                 )}
 
-                                {viewState === 'result' && (
-                                    <ResultView text={resultText} roll={userRoll} onReset={reset} />
+                                {viewState === 'result' && resultText && (
+                                    <ResultView resultData={resultText} roll={userRoll} onReset={reset} />
                                 )}
                             </div>
                         </div>
