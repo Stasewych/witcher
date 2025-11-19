@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Відьмак: Генератор Подій</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,600;0,800;1,400&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Global Styles */
+        body {
+            background-color: #020202;
+            color: #a8a8a8;
+            font-family: 'Alegreya', serif;
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-alegreya { font-family: 'Alegreya', serif; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0a0a0a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5a059; border-radius: 2px; }
+        
+        /* Animations */
+        @keyframes float { 
+            0% { transform: translateY(0px); } 
+            50% { transform: translateY(-10px); } 
+            100% { transform: translateY(0px); } 
+        }
+        
+        .perspective-1000 { perspective: 1000px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONS (SVG Components to replace Lucide) ---
+        const IconWrapper = ({ children, size = 24, className = "" }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const Settings = (props) => <IconWrapper {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconWrapper>;
+        // Renamed to MapIcon to avoid conflict with global Map constructor
+        const MapIcon = (props) => <IconWrapper {...props}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></IconWrapper>;
+        const Sword = (props) => <IconWrapper {...props}><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/></IconWrapper>;
+        const Ship = (props) => <IconWrapper {...props}><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.9 5.8 2.38 8"/><path d="M10 2v16"/><path d="M16 6h-6"/><path d="M12 18 7 6l5-3 5 3Z"/></IconWrapper>;
+        const Anchor = (props) => <IconWrapper {...props}><circle cx="12" cy="5" r="3"/><line x1="12" x2="12" y1="22" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></IconWrapper>;
+        const Skull = (props) => <IconWrapper {...props}><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></IconWrapper>;
+        const Sparkles = (props) => <IconWrapper {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M19 17v4"/><path d="M15 19h4"/></IconWrapper>;
+        const Dices = (props) => <IconWrapper {...props}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></IconWrapper>;
+        const AlertTriangle = (props) => <IconWrapper {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></IconWrapper>;
+        const ChevronRight = (props) => <IconWrapper {...props}><path d="m9 18 6-6-6-6"/></IconWrapper>;
+        const Feather = (props) => <IconWrapper {...props}><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" x2="2" y1="8" y2="22"/><line x1="17.5" x2="9" y1="15" y2="15"/></IconWrapper>;
+        const XIcon = (props) => <IconWrapper {...props}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></IconWrapper>;
+        const Copy = (props) => <IconWrapper {...props}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></IconWrapper>;
+        const Check = (props) => <IconWrapper {...props}><polyline points="20 6 9 17 4 12"/></IconWrapper>;
+        const ShieldAlert = (props) => <IconWrapper {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></IconWrapper>;
+        const Coins = (props) => <IconWrapper {...props}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></IconWrapper>;
+        const Scroll = (props) => <IconWrapper {...props}><path d="M8 17.92V22a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2Z"/><path d="M8 2v15.92a2 2 0 0 0 2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.08a2 2 0 0 0 2-2Z"/></IconWrapper>;
+
+
+        // --- ASSETS (High Fidelity) ---
+        const TEXTURES = {
+            paper: "https://www.transparenttextures.com/patterns/aged-paper.png",
+            darkLeather: "https://www.transparenttextures.com/patterns/black-scales.png",
+            fog: "https://www.transparenttextures.com/patterns/foggy-birds.png",
+            runes: "https://www.transparenttextures.com/patterns/asfalt-dark.png",
+            noise: "https://www.transparenttextures.com/patterns/stardust.png"
+        };
+
+        const COMMUNITY_KEY = "AIzaSyAkMxB5cWJB9OZ7yciACRFhxPp2CJ3_pew";
+
+        // --- SYSTEM PROMPT ---
+        const SYSTEM_PROMPT = `
+        Ти - Майстер Гри (Game Master) для настільної гри "The Witcher: Old World".
+        Твоє завдання: Згенерувати ОДНУ глибоку та атмосферну картку події.
+
+        МОВА: Українська.
+        СТИЛЬ: Темне фентезі, "Відьмак 3", книги Сапковського. Текст має бути літературним, занурюючим.
+
+        ПРАВИЛА МЕХАНІКИ (СУВОРО):
+        1. ЖИТТЯ: Використовуй термін "Рівень Щита". Поранення = "Знизьте рівень Щита на X".
+        2. ЕКОНОМІКА: Золото, Еліксири, Жетони сліду.
+        3. НАВИЧКИ: Бою, Захисту, Алхімії, Спеціалізації.
+        4. ФАЗА III (Відпочинок): "У фазу III візьміть зі своєї колоди на 1 карту більше/менше".
+        5. КОЛОДА: "Візьміть карту вартістю 0 з ряду" або "Приберіть 1 карту з гри".
+
+        БАЛАНС:
+        - Жодних безкоштовних подарунків. Успіх має ціну (втрата щита, золота, карт).
+        - Варіанти вибору мають бути морально складними або ризикованими.
+
+        ФОРМАТ (JSON):
+        {
+        "id": [random number],
+        "type": "[city/wilds/skellige]",
+        "title": "[Епічна назва]",
+        "story": "[Довгий, атмосферний текст опису ситуації]",
+        "choices": [
+            {
+            "label": "[Дія гравця]",
+            "result": "[Художній опис] \\n\\n(НАСЛІДОК): [Ігровий ефект]"
+            },
+            {
+            "label": "[Дія гравця]",
+            "result": "[Киньте кубик]\\n1-3: [Провал]. (НАСЛІДОК): [Штраф].\\n4-6: [Успіх]. (НАСЛІДОК): [Нагорода]."
+            }
+        ]
+        }
+        `;
+
+        // --- LOGIC ---
+
+        const parseDiceOutcome = (text, roll) => {
+            const lines = text.split('\n');
+            const rangeRegex = /(?:^|\s)(\d+)(?:-(\d+))?:/;
+
+            const matchedLines = lines.filter(line => {
+                const match = line.match(rangeRegex);
+                if (match) {
+                const start = parseInt(match[1]);
+                const end = match[2] ? parseInt(match[2]) : start;
+                if (roll >= start && roll <= end) {
+                    return true;
+                }
+                }
+                return false;
+            });
+
+            if (matchedLines.length > 0) {
+                return matchedLines.map(line => line.replace(rangeRegex, '').trim()).join('\n\n');
+            } else {
+                return text;
+            }
+        };
+
+        const fetchLiveEvent = async (type, apiKey) => {
+            if (!apiKey) throw new Error("API Key is missing");
+            // Using the reliable flash preview model which handles formatting well
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const requestBody = { contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\nТип події: "${type}". Згенеруй нову, унікальну історію.` }] }] };
+            
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+                if (!response.ok) throw new Error((await response.json()).error?.message || "API Error");
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                return jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
+            } catch (error) {
+                console.error("Generation failed:", error);
+                throw error;
+            }
+        };
+
+        // --- UI COMPONENTS ---
+
+        const RuneLoader = () => (
+            <div className="flex flex-col items-center justify-center space-y-8 text-[#c5a059] animate-in fade-in duration-1000">
+                <div className="relative w-32 h-32">
+                <div className="absolute inset-0 border-[1px] border-[#c5a059]/20 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                <div className="absolute inset-2 border-[1px] border-[#c5a059]/40 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-24 h-24 bg-[#c5a059]/5 rounded-full blur-xl animate-pulse"></div>
+                    <Feather size={40} className="opacity-80 text-[#c5a059]" />
+                </div>
+                {/* Orbiting runes */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-2 h-2 bg-[#c5a059] rounded-full shadow-[0_0_10px_#c5a059] animate-ping"></div>
+                </div>
+                <span className="font-cinzel text-xs tracking-[0.5em] uppercase text-[#c5a059]/60">Створення Легенди...</span>
+            </div>
+        );
+
+        const SettingsModal = ({ isOpen, onClose, apiKey, setApiKey }) => {
+            const [copied, setCopied] = useState(false);
+            
+            const pasteKey = () => {
+                setApiKey(COMMUNITY_KEY);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            if (!isOpen) return null;
+            
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl animate-in fade-in duration-300">
+                <div className="relative bg-[#050505] border border-[#c5a059]/30 p-10 w-full max-w-lg shadow-[0_0_100px_rgba(197,160,89,0.1)] rounded-sm overflow-hidden">
+                    <div className="absolute inset-0 opacity-5 pointer-events-none" style={{backgroundImage: `url(${TEXTURES.runes})`}}></div>
+                    
+                    <button onClick={onClose} className="absolute top-6 right-6 text-[#444] hover:text-[#c5a059] transition-colors">
+                    <XIcon size={24}/>
+                    </button>
+
+                    <div className="mb-10 text-center relative z-10">
+                    <Settings size={40} className="text-[#c5a059] mx-auto mb-4 opacity-80" />
+                    <h2 className="font-cinzel text-[#e8dcca] text-3xl tracking-[0.2em] font-bold">Налаштування</h2>
+                    </div>
+
+                    <div className="space-y-8 relative z-10">
+                    <div>
+                        <label className="block text-xs font-cinzel font-bold text-[#666] mb-3 tracking-[0.2em] uppercase">Gemini API Key</label>
+                        <div className="relative group">
+                        <input 
+                            type="password" 
+                            value={apiKey} 
+                            onChange={(e) => setApiKey(e.target.value)} 
+                            placeholder="Вставте ключ тут..." 
+                            className="w-full bg-[#0a0a0a] border border-[#333] p-4 text-[#c5a059] text-sm focus:border-[#c5a059] outline-none rounded-sm font-mono placeholder:text-[#333] transition-all shadow-inner"
+                        />
+                        </div>
+                        
+                        <div className="mt-4 flex justify-center">
+                            <button 
+                            onClick={pasteKey}
+                            className="flex items-center gap-2 text-xs font-cinzel text-[#c5a059] hover:text-[#ffeec2] transition-colors border border-[#c5a059]/30 px-4 py-2 rounded-sm hover:bg-[#c5a059]/10"
+                            >
+                            {copied ? <Check size={14} /> : <Copy size={14} />}
+                            {copied ? "Ключ Вставлено" : "Вставити Ключ Спільноти"}
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+
+                    <button 
+                    onClick={onClose} 
+                    className="w-full mt-10 py-5 bg-[#c5a059] hover:bg-[#d4b575] text-black font-cinzel text-sm uppercase font-bold tracking-[0.3em] transition-all duration-300 shadow-[0_0_30px_rgba(197,160,89,0.2)]"
+                    >
+                    Підтвердити
+                    </button>
+                </div>
+                </div>
+            );
+        };
+
+        const DiceInput = ({ onInput }) => (
+            <div className="w-full max-w-md mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="text-center mb-8">
+                <p className="text-[#c5a059] font-cinzel text-lg tracking-[0.2em] uppercase font-bold mb-3 drop-shadow-lg">Випробування Долі</p>
+                <div className="h-[1px] w-24 bg-[#c5a059]/50 mx-auto mb-4"></div>
+                <p className="text-[#666] font-serif italic text-base">Киньте фізичний кубик та оберіть результат</p>
+                </div>
+                <div className="grid grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map(num => (
+                    <button 
+                        key={num} 
+                        onClick={() => onInput(num)}
+                        className="
+                        group relative aspect-square flex items-center justify-center 
+                        bg-[#0a0a0a] border border-[#333] hover:border-[#c5a059] 
+                        transition-all duration-300 transform hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(197,160,89,0.1)]
+                        "
+                    >
+                        <span className="font-cinzel font-black text-4xl text-[#333] group-hover:text-[#c5a059] transition-colors duration-500">{num}</span>
+                    </button>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const CardFrame = ({ children, type }) => {
+            const themes = {
+                city: { border: 'border-amber-900/60', glow: 'shadow-amber-900/20', icon: 'text-amber-700' },
+                wilds: { border: 'border-emerald-900/60', glow: 'shadow-emerald-900/20', icon: 'text-emerald-700' },
+                skellige: { border: 'border-cyan-900/60', glow: 'shadow-cyan-900/20', icon: 'text-cyan-700' }
+            };
+            const theme = themes[type] || themes.city;
+
+            return (
+                <div className="relative w-full max-w-3xl mx-auto perspective-1000 flex flex-col group">
+                {/* Outer Glow */}
+                <div className={`absolute inset-0 rounded-sm bg-gradient-to-b from-black to-transparent opacity-80 blur-2xl transform scale-95 translate-y-4 transition-all duration-700 ${theme.glow}`}></div>
+                
+                <div className={`
+                    relative w-full bg-[#0a0a0a] rounded-sm shadow-2xl flex flex-col border-[1px] ${theme.border}
+                    overflow-hidden transition-all duration-500 min-h-[700px]
+                `}>
+                    {/* Layered Textures */}
+                    <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-overlay" style={{backgroundImage: `url(${TEXTURES.darkLeather})`}}></div>
+                    <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-multiply" style={{backgroundImage: `url(${TEXTURES.paper})`}}></div>
+                    {(type === 'wilds' || type === 'skellige') && (
+                    <div className="absolute inset-0 opacity-30 pointer-events-none mix-blend-screen animate-pulse" style={{animationDuration: '8s', backgroundImage: `url(${TEXTURES.fog})`}}></div>
+                    )}
+
+                    {/* Ornamental Corners */}
+                    <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-[#c5a059]/30 rounded-tl-sm pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-[#c5a059]/30 rounded-tr-sm pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-[#c5a059]/30 rounded-bl-sm pointer-events-none"></div>
+                    <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-[#c5a059]/30 rounded-br-sm pointer-events-none"></div>
+
+                    {children}
+                </div>
+                </div>
+            );
+        };
+
+        const ActionButton = ({ onClick, label, index }) => (
+            <button 
+                onClick={onClick}
+                className="
+                group w-full text-left relative overflow-hidden mb-6 transition-all duration-500 
+                bg-gradient-to-r from-[#080808] to-[#050505] border border-[#222] hover:border-[#c5a059]
+                shadow-lg hover:shadow-[0_0_20px_rgba(197,160,89,0.1)]
+                "
+            >
+                <div className="flex items-stretch">
+                {/* Index/Icon Box */}
+                <div className="w-20 flex flex-col items-center justify-center border-r border-[#222] group-hover:border-[#c5a059]/30 bg-[#030303] transition-colors duration-500">
+                    <span className="font-cinzel text-[#333] group-hover:text-[#c5a059] font-black text-3xl transition-colors duration-500">
+                    {index === 0 ? 'I' : 'II'}
+                    </span>
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 p-6 flex items-center relative">
+                    <span className="font-alegreya text-[#b0b0b0] text-xl leading-relaxed group-hover:text-[#e8dcca] transition-colors duration-300">
+                    {label}
+                    </span>
+                </div>
+                </div>
+            </button>
+        );
+
+        const ResultView = ({ text, roll, onReset }) => (
+            <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700 p-8">
+                <div className="flex-1 flex flex-col justify-center items-center mb-8">
+                <div className="w-full relative bg-[#080808]/80 border border-[#c5a059]/30 shadow-2xl rounded-sm p-10">
+                    
+                    {/* Decorative Elements */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-[#c5a059] to-transparent shadow-[0_0_10px_#c5a059]"></div>
+                    
+                    <div className="flex items-center justify-center gap-3 mb-8">
+                    {roll && (
+                        <div className="w-12 h-12 flex items-center justify-center border-2 border-[#c5a059] text-[#c5a059] font-cinzel font-bold text-2xl bg-black rotate-3 shadow-[0_0_20px_rgba(197,160,89,0.4)] transform hover:rotate-12 transition-transform duration-500">
+                        {roll}
+                        </div>
+                    )}
+                    <h3 className="font-cinzel text-[#c5a059] text-xl uppercase tracking-[0.3em] font-bold drop-shadow-md">
+                        Доля Вирішена
+                    </h3>
+                    </div>
+
+                    <div className="relative">
+                    <span className="absolute -left-6 -top-4 text-6xl text-[#c5a059]/10 font-serif">“</span>
+                    <p className="font-alegreya text-2xl md:text-3xl text-[#e8dcca] italic leading-loose whitespace-pre-line text-center">
+                        {text}
+                    </p>
+                    <span className="absolute -right-6 bottom-0 text-6xl text-[#c5a059]/10 font-serif rotate-180">“</span>
+                    </div>
+                </div>
+                </div>
+
+                <div className="pt-6 border-t border-white/10">
+                <button 
+                    onClick={onReset}
+                    className="
+                    w-full py-6 bg-[#8a1c1c] hover:bg-[#a02222] text-[#e8dcca] 
+                    font-cinzel font-bold text-xl uppercase tracking-[0.25em] 
+                    transition-all rounded-sm flex items-center justify-center gap-4 
+                    shadow-[0_5px_15px_rgba(0,0,0,0.5)] hover:shadow-[0_5px_30px_rgba(138,28,28,0.5)]
+                    border border-white/10 transform hover:-translate-y-1
+                    "
+                >
+                    <span>Далі в Дорогу</span>
+                    <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                </div>
+            </div>
+        );
+
+        const ModeButton = ({ active, onClick, icon: Icon, label, themeColor }) => (
+            <button 
+                onClick={onClick}
+                className={`
+                relative flex-1 py-6 flex flex-col items-center justify-center gap-3 
+                transition-all duration-700 group overflow-hidden
+                ${active ? 'opacity-100' : 'opacity-40 hover:opacity-70'}
+                `}
+            >
+                {/* Active Background Spot */}
+                {active && (
+                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-${themeColor}-500/10 to-transparent blur-md`}></div>
+                )}
+                
+                <Icon 
+                size={24} 
+                className={`relative z-10 transition-all duration-500 ${active ? `text-${themeColor}-400 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]` : 'text-[#888]'}`} 
+                />
+                <span className={`relative z-10 font-cinzel text-xs font-bold uppercase tracking-[0.2em] transition-colors ${active ? 'text-[#e8dcca]' : 'text-[#666]'}`}>
+                {label}
+                </span>
+                
+                {/* Active Underline */}
+                {active && (
+                    <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-[2px] bg-${themeColor}-500 shadow-[0_0_10px_currentColor]`}></div>
+                )}
+            </button>
+        );
+
+        function WitcherAppDeep() {
+            const [activeTab, setActiveTab] = useState('city');
+            const [viewState, setViewState] = useState('start');
+            const [apiKey, setApiKey] = useState('');
+            const [currentCard, setCurrentCard] = useState(null);
+            const [diceCallback, setDiceCallback] = useState(null);
+            const [resultText, setResultText] = useState('');
+            const [userRoll, setUserRoll] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [showSettings, setShowSettings] = useState(false);
+            
+            // Parallax Mouse
+            const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+            useEffect(() => {
+                const savedKey = localStorage.getItem('witcher_api_key');
+                if (savedKey) setApiKey(savedKey);
+
+                const handleMove = (e) => {
+                    setMousePos({
+                        x: (e.clientX / window.innerWidth - 0.5) * 15,
+                        y: (e.clientY / window.innerHeight - 0.5) * 15
+                    });
+                };
+                window.addEventListener('mousemove', handleMove);
+                return () => window.removeEventListener('mousemove', handleMove);
+            }, []);
+
+            useEffect(() => { if (apiKey) localStorage.setItem('witcher_api_key', apiKey); }, [apiKey]);
+
+            const generateEvent = async () => {
+                setLoading(true);
+                setError(null);
+                setViewState('story');
+                setUserRoll(null);
+                try {
+                    if (!apiKey) {
+                    setShowSettings(true);
+                    throw new Error("Ключ Сфер відсутній.");
+                    }
+                    const liveData = await fetchLiveEvent(activeTab, apiKey);
+                    setCurrentCard(liveData);
+                } catch (err) { 
+                    setError(err.message); 
+                    setViewState('start'); 
+                } finally { 
+                    setLoading(false); 
+                }
+            };
+
+            const handleChoice = (choice) => {
+                if (choice.result.toLowerCase().includes("киньте кубик") || choice.result.match(/\d-\d:/)) {
+                setViewState('dice');
+                setDiceCallback(() => (roll) => {
+                    setUserRoll(roll);
+                    const outcome = parseDiceOutcome(choice.result, roll);
+                    setResultText(outcome);
+                    setViewState('result');
+                });
+                } else {
+                setUserRoll(null);
+                setResultText(choice.result);
+                setViewState('result');
+                }
+            };
+
+            const reset = () => { setViewState('start'); setCurrentCard(null); };
+
+            // Theme colors for logic
+            const themeColor = activeTab === 'city' ? 'amber' : activeTab === 'skellige' ? 'cyan' : 'emerald';
+
+            return (
+                <div className="min-h-screen bg-[#020202] text-[#a8a8a8] font-sans pb-0 selection:bg-[#c5a059] selection:text-black overflow-hidden">
+                
+                {/* DEEP ATMOSPHERE LAYERS */}
+                <div className="fixed inset-0 z-0 pointer-events-none">
+                    {/* Vignette */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000_100%)] z-20"></div>
+                    
+                    {/* Fog Layer 1 */}
+                    <div 
+                        className="absolute inset-[-10%] opacity-10 mix-blend-screen transition-transform duration-1000 ease-out z-10" 
+                        style={{
+                            backgroundImage: `url(${TEXTURES.fog})`, 
+                            transform: `translate(${mousePos.x * -2}px, ${mousePos.y * -2}px) scale(1.2)`
+                        }}
+                    ></div>
+
+                    {/* Background Image/Color */}
+                    <div className={`absolute inset-0 transition-colors duration-1000 z-0
+                        ${activeTab === 'city' ? 'bg-[#1a1208]' : activeTab === 'skellige' ? 'bg-[#08141a]' : 'bg-[#0a1a0f]'}
+                    `}></div>
+                    
+                    {/* Noise Texture */}
+                    <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{backgroundImage: `url(${TEXTURES.noise})`}}></div>
+                </div>
+                
+                <div className="relative z-10 w-full max-w-4xl mx-auto min-h-screen flex flex-col border-x border-white/5 bg-black/40 shadow-2xl backdrop-blur-sm">
+                    
+                    {/* HEADER */}
+                    <header className="p-0 relative z-30">
+                    <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    
+                    <div className="p-8 pb-4 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-4xl font-cinzel font-black text-[#c5a059] tracking-[0.15em] uppercase drop-shadow-[0_0_15px_rgba(197,160,89,0.3)]">
+                            Відьмак
+                            </h1>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="h-[1px] w-8 bg-[#c5a059]/50"></div>
+                                <span className="text-[10px] text-[#888] font-cinzel tracking-[0.4em] uppercase">
+                                Генератор Подій
+                                </span>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setShowSettings(true)} 
+                            className="text-[#444] hover:text-[#c5a059] transition-all duration-500 transform hover:rotate-180"
+                        >
+                            <Settings size={24}/>
+                        </button>
+                    </div>
+                    
+                    {/* TABS */}
+                    <div className="flex w-full px-8">
+                        <ModeButton active={activeTab === 'city'} onClick={() => {setActiveTab('city'); reset();}} icon={MapIcon} label="Місто" themeColor="amber"/>
+                        <ModeButton active={activeTab === 'wilds'} onClick={() => {setActiveTab('wilds'); reset();}} icon={Sword} label="Нетрі" themeColor="emerald"/>
+                        <ModeButton active={activeTab === 'skellige'} onClick={() => {setActiveTab('skellige'); reset();}} icon={Ship} label="Скелліге" themeColor="cyan"/>
+                    </div>
+                    </header>
+
+                    <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey} />
+
+                    {/* MAIN CONTENT */}
+                    <main className="flex-1 p-6 flex flex-col justify-center relative">
+                    
+                    {error && (
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-950/80 border border-red-900/50 p-4 rounded-sm text-red-200 text-sm flex gap-4 items-center backdrop-blur-md animate-in slide-in-from-top-2 shadow-xl z-50">
+                            <AlertTriangle size={18}/>
+                            <p className="font-cinzel tracking-wide">{error}</p>
+                        </div>
+                    )}
+                    
+                    {/* START SCREEN */}
+                    {viewState === 'start' && !loading && (
+                        <div className="flex flex-col items-center justify-center text-center h-[500px] animate-in fade-in duration-1000">
+                        
+                        {/* Emblem */}
+                        <div className="relative mb-12 group cursor-pointer" onClick={generateEvent}>
+                            <div className={`absolute inset-0 rounded-full blur-[60px] opacity-20 group-hover:opacity-50 transition-opacity duration-1000 
+                                ${activeTab === 'city' ? 'bg-amber-500' : activeTab === 'skellige' ? 'bg-cyan-500' : 'bg-emerald-500'}`}>
+                            </div>
+                            
+                            <div className={`relative w-48 h-48 flex items-center justify-center transition-transform duration-700 group-hover:scale-105`}>
+                                {activeTab === 'city' ? <MapIcon size={100} strokeWidth={0.5} className="text-[#c5a059] drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" /> : 
+                                activeTab === 'skellige' ? <Anchor size={100} strokeWidth={0.5} className="text-cyan-600 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" /> : 
+                                <Sword size={100} strokeWidth={0.5} className="text-emerald-600 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" />}
+                            </div>
+                        </div>
+
+                        <h2 className="text-3xl font-cinzel text-[#e8dcca] mb-8 tracking-[0.2em] font-bold opacity-90">
+                            {activeTab === 'city' ? 'Дослідити Місто' : activeTab === 'skellige' ? 'Вийти в Море' : 'Вирушити в Шлях'}
+                        </h2>
+                        
+                        <button 
+                            onClick={generateEvent} 
+                            className="
+                            px-16 py-5 bg-transparent border border-[#c5a059]/50 text-[#c5a059] 
+                            font-cinzel font-bold text-sm uppercase tracking-[0.3em] 
+                            hover:bg-[#c5a059] hover:text-black transition-all duration-500
+                            "
+                        >
+                            Почати
+                        </button>
+                        </div>
+                    )}
+
+                    {/* LOADING */}
+                    {loading && (
+                        <div className="h-[600px] flex flex-col items-center justify-center animate-in fade-in duration-700">
+                        <RuneLoader />
+                        </div>
+                    )}
+
+                    {/* ACTIVE CARD VIEW */}
+                    {!loading && currentCard && viewState !== 'start' && (
+                        <div className="w-full max-w-3xl mx-auto h-full min-h-[600px] flex flex-col animate-in zoom-in-95 duration-700">
+                        
+                        {/* THE CARD */}
+                        <div className={`
+                            relative w-full flex-1 bg-[#0f0f0f] shadow-[0_20px_60px_rgba(0,0,0,0.7)] border border-white/10
+                            flex flex-col overflow-hidden rounded-sm group
+                        `}>
+                            {/* Dynamic Border Color */}
+                            <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${themeColor}-600 to-transparent opacity-50`}></div>
+
+                            {/* Header */}
+                            <div className="p-8 pb-4 text-center relative z-10">
+                                <div className="inline-flex items-center gap-3 mb-2 opacity-50">
+                                    <div className="h-[1px] w-8 bg-[#c5a059]"></div>
+                                    <span className="font-cinzel text-[10px] uppercase tracking-[0.3em] text-[#c5a059]">Подія #{currentCard.id}</span>
+                                    <div className="h-[1px] w-8 bg-[#c5a059]"></div>
+                                </div>
+                                <h2 className="text-3xl md:text-4xl font-cinzel font-bold text-[#e8dcca] leading-tight drop-shadow-lg">
+                                    {currentCard.title}
+                                </h2>
+                            </div>
+
+                            {/* Content Area */}
+                            <div className="flex-1 relative p-8 md:p-12 pt-4 overflow-hidden flex flex-col">
+                                {/* Textures */}
+                                <div className="absolute inset-0 opacity-30 pointer-events-none mix-blend-overlay" style={{backgroundImage: `url(${TEXTURES.darkLeather})`}}></div>
+                                <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-multiply" style={{backgroundImage: `url(${TEXTURES.paper})`}}></div>
+                                
+                                {viewState === 'story' && (
+                                    <div className="flex-1 flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-700 relative z-10">
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-6">
+                                            <p className="font-alegreya text-2xl md:text-3xl text-[#dcd1bc] leading-loose text-justify whitespace-pre-wrap drop-shadow-sm first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:text-[#c5a059]">
+                                                {currentCard.story}
+                                            </p>
+                                        </div>
+                                        <div className="mt-8 space-y-4 pt-8 border-t border-white/5">
+                                            {currentCard.choices.map((c, i) => (
+                                                <ActionButton key={i} index={i} label={c.label} onClick={() => handleChoice(c)} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {viewState === 'dice' && (
+                                    <div className="flex-1 flex flex-col items-center justify-center relative z-10 animate-in zoom-in-95">
+                                        <div className="absolute inset-0 bg-[#c5a059] blur-[100px] opacity-5"></div>
+                                        <Dices size={80} className="text-[#c5a059] mb-8 drop-shadow-[0_0_25px_rgba(197,160,89,0.6)]"/>
+                                        <DiceInput onInput={diceCallback} />
+                                    </div>
+                                )}
+
+                                {viewState === 'result' && (
+                                    <ResultView text={resultText} roll={userRoll} onReset={reset} />
+                                )}
+                            </div>
+                        </div>
+                        </div>
+                    )}
+                    </main>
+                </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<WitcherAppDeep />);
+    </script>
+</body>
+</html>
